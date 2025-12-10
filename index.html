@@ -173,7 +173,7 @@
     #viz2 h2::before { background: var(--gradient-3); }
     #viz3 h2::before { background: var(--gradient-4); }
     #viz4 h2::before { background: var(--gradient-5); }
-    #viz5 h2::before { background: var(--gradient-1); }
+    #viz-map h2::before { background: var(--gradient-1); }
     
     h3 {
       font-size: 22px;
@@ -250,8 +250,9 @@
     
     /* Vibrant chart containers */
     .chart-container {
-      margin: 30px -30px 0 -30px;
-      padding: 0;
+      margin: 30px auto 0 auto;
+      padding: 0 12px;
+      max-width: 1100px;
       background: white;
       border-radius: 16px;
       overflow: hidden;
@@ -541,6 +542,26 @@
       <p>To understand the subway network's structure, we used station location data from <a href="https://opendata.cityofnewyork.us/" target="_blank">NYC Open Data</a>. This geographic information helps us understand why different parts of the subway system recovered differently.</p>
     </section>
 
+    <!-- Visualization 0: Map Overview -->
+    <section id="viz-map">
+      <h2>Understanding the Subway Network</h2>
+      <p>Before diving into the trends, here is the subway system itself. The side-by-side maps show stations in 2023 (left) and 2020 (right), with orange dots for each stop. Larger dots mean higher ridership.</p>
+
+      <p><em>How to interact:</em> Pan and zoom to explore each borough, and hover over stations to compare ridership between 2020 and 2023.</p>
+
+      <p>2020 (right) captures the pandemic collapse—tiny, uniform dots across the city. By 2023 (left), core Manhattan stations and major corridors regain size while outer-borough stops recover more slowly, highlighting how central business districts bounced back first.</p>
+      
+      <div class="chart-container">
+        <div class="map-grid">
+          <iframe class="map-frame" allow="local-network-access; geolocation" title="NYC Subway 2023"
+            src="https://nu.maps.arcgis.com/apps/mapviewer/index.html?configurableview=true&webmap=1a11ba87cc6642538dd7b9e79e07bfd8&theme=light&scroll=false&center=-73.97172145699336,40.73841003121678&scale=72223.819286"></iframe>
+          <iframe class="map-frame" allow="local-network-access; geolocation" title="NYC Subway 2020"
+            src="https://nu.maps.arcgis.com/apps/mapviewer/index.html?configurableview=true&webmap=15ad1408e8774c15909bd0e8dd9f3a7f&theme=light&scroll=false&center=-73.96597883718917,40.73350915450238&scale=72223.819286"></iframe>
+        </div>
+        <p class="map-caption">Left: 2023 ridership | Right: 2020 ridership</p>
+      </div>
+    </section>
+
     <!-- Visualization 1: Transit Usage Over Time -->
     <section id="viz1">
       <h2>Three Different Recovery Stories</h2>
@@ -555,7 +576,7 @@
       <p>Subways recovered the least. Even by 2024, subway ridership only reached about 60–80% of pre-pandemic levels, meaning roughly one million daily riders never came back. The gap between the rising blue line for cars and the much lower red line for subways suggests permanent lifestyle changes: some people moved away, some shifted to full-time remote work, and others became long-term drivers.</p>
       
       <div class="chart-container">
-        <iframe class="chart-frame xl" src="charts/mta_usage.html" title="Transit Usage Over Time"></iframe>
+        <iframe class="chart-frame wide" src="charts/mta_usage.html" title="Transit Usage Over Time"></iframe>
       </div>
     </section>
 
@@ -564,7 +585,7 @@
       <h2>How Weather Started to Matter</h2>
       <p>Before the pandemic, weather didn't affect subway ridership much. Rain or shine, people had to go to work, so they took the subway regardless. But something changed after the pandemic, and this visualization shows exactly what.</p>
       
-      <p>We created violin plots to show the distribution of daily ridership across four time periods: before COVID, during COVID, the recovery phase, and post-pandemic. Each violin's width shows how common different ridership levels were, and the colors show different weather conditions.</p>
+      <p>We created violin plots to show the distribution of daily ridership across the key pandemic eras—during COVID, the recovery phase, and post-pandemic. The short pre-pandemic slice of 2020 was removed to keep the comparison balanced across periods. Each violin's width shows how common different ridership levels were, and the colors show different weather conditions.</p>
       
       <p>What this visualization really shows is freedom. Before the pandemic, people had no freedom—work required being in the office. Now, many people can choose whether to go in based on weather, how they feel, or what day of the week it is. The subway went from being a necessity to being one option among many.</p>
 
@@ -578,14 +599,14 @@
     <!-- Visualization 3: AQI vs Ridership -->
     <section id="viz3">
       <h2>Does Air Quality Affect Subway Ridership?</h2>
-     <p>New York's air quality changes throughout the year. Summer brings heat and smog; winter brings pollution from heating systems; and sometimes wildfire smoke from Canada drifts over the city, like the orange sky in summer 2023. The scatter plot in this visualization shows each day as a dot, colored by which pandemic period it belongs to.</p>
+     <p>New York's air quality changes throughout the year. Summer brings heat and smog; winter brings pollution from heating systems; and sometimes wildfire smoke from Canada drifts over the city, like the orange sky in summer 2023. The scatter plot uses AQI on the x-axis and subway ridership on the y-axis, with each dot colored by pandemic period.</p>
 
-     <p><em>How to interact:</em> Use the slider to adjust the AQI threshold and filter days by air quality, then hover over points to see the exact AQI and ridership for a given date.</p>
+     <p><em>How to interact:</em> Move the date slider to reveal more of the timeline, adjust the AQI slider to cap the air-quality range, and hover over points to see the exact date, AQI, and ridership.</p>
 
      <p>We might expect that, if the pandemic made people more health-conscious, they would care more about air quality when deciding whether to ride the subway. In our data, we see only small differences in ridership across AQI thresholds, especially compared with the much larger differences across weekdays and pandemic phases. By 2024, whether people ride the subway appears to depend more on work schedules and travel routines than on daily air-quality levels.</p>
 
       <div class="chart-container">
-        <iframe class="chart-frame xl" src="charts/aqi_periods_v2.html" title="AQI vs Ridership Pandemic Timeline"></iframe>
+        <iframe class="chart-frame wide" src="charts/aqi_periods_v2.html" title="AQI vs Ridership Pandemic Timeline"></iframe>
       </div>
     </section>
 
@@ -600,30 +621,6 @@
       
       <div class="chart-container">
         <iframe class="chart-frame tall" src="charts/heatmap.html" title="Ridership by Precipitation & Weekday"></iframe>
-      </div>
-    </section>
-
-    <!-- Visualization 5: Map -->
-    <section id="viz5">
-      <h2>Understanding the Subway Network</h2>
-      <p>To make sense of all these patterns, we need to see how ridership changed across different parts of the city. This map comparison shows NYC subway stations in 2023 (left) and 2020 (right), with orange dots representing each station. The size of each dot shows the ridership level at that station—larger dots mean more riders.</p>
-
-      <p><em>How to interact:</em> Pan and zoom to explore different boroughs, and hover over stations or areas to compare ridership in 2020 and 2023.</p>
-
-      <p>Looking at the 2020 map (right), we see much smaller orange dots across the entire system. This was during the pandemic when ridership collapsed. The dots are tiny and fairly uniform in size, showing that ridership was low everywhere.</p>
-      
-      <p>The 2023 map (left) tells a different story. The dots have grown larger, but not evenly. Notice how the orange dots in Manhattan's core (the dense center area) are noticeably larger. Stations in Midtown, the Financial District, and along major north-south corridors show bigger dots, indicating stronger ridership recovery. This makes sense—these areas contain offices, businesses, and services that require in-person presence.</p>
-      
-      <p>The size difference between dots reveals the geographic inequality of recovery. Central Manhattan stations recovered ridership faster and stronger (larger dots), while suburban and residential stations show weaker recovery (smaller dots). You can see this pattern radiating outward—the farther from Manhattan's core, the smaller the dots tend to be.</p>
-      
-      <div class="chart-container">
-        <div class="map-grid">
-          <iframe class="map-frame" allow="local-network-access; geolocation" title="NYC Subway 2023"
-            src="https://nu.maps.arcgis.com/apps/mapviewer/index.html?configurableview=true&webmap=1a11ba87cc6642538dd7b9e79e07bfd8&theme=light&scroll=false&center=-73.97172145699336,40.73841003121678&scale=72223.819286"></iframe>
-          <iframe class="map-frame" allow="local-network-access; geolocation" title="NYC Subway 2020"
-            src="https://nu.maps.arcgis.com/apps/mapviewer/index.html?configurableview=true&webmap=15ad1408e8774c15909bd0e8dd9f3a7f&theme=light&scroll=false&center=-73.96597883718917,40.73350915450238&scale=72223.819286"></iframe>
-        </div>
-        <p class="map-caption">Left: 2023 ridership | Right: 2020 ridership</p>
       </div>
     </section>
 
@@ -662,4 +659,17 @@
     <p style="margin-top: 8px;">Project created for DS4200: Information Presentation and Data Visualization, Fall 2025</p>
   </footer>
 
-  <script data-cfasync="false" src="/cdn-cgi/
+  <script>
+    const scrollIndicator = document.getElementById('scrollIndicator');
+    const updateScrollIndicator = () => {
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+      scrollIndicator.style.width = `${progress}%`;
+    };
+    window.addEventListener('scroll', updateScrollIndicator);
+    window.addEventListener('resize', updateScrollIndicator);
+    updateScrollIndicator();
+  </script>
+</body>
+</html>

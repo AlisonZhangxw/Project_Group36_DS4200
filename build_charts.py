@@ -6,7 +6,8 @@ from pathlib import Path
 alt.data_transformers.disable_max_rows()
 
 ROOT = Path(__file__).parent
-DATA_DIR = ROOT / 'data'
+# Data files live in the repository root for this project
+DATA_DIR = ROOT
 CHART_DIR = ROOT / 'charts'
 CHART_DIR.mkdir(exist_ok=True)
 
@@ -82,7 +83,7 @@ heatmap = (
     .encode(
         x=alt.X('precipitation_level:O', title='Precipitation Level', sort=precip_order,
                 axis=alt.Axis(labelAngle=-45, labelFont=FONT_STACK, titleFont=FONT_STACK)),
-        y=alt.Y('day_of_week:O', title='Day of Week',
+        y=alt.Y('day_of_week:O', title='Day of Week', sort=list(merged_weather['day_of_week'].cat.categories),
                 axis=alt.Axis(labelFont=FONT_STACK, titleFont=FONT_STACK)),
         color=alt.Color('avg_ridership:Q', title='Avg Daily Ridership',
                         scale=alt.Scale(scheme='blues', domain=[min_val, max_val])),
@@ -153,7 +154,9 @@ def categorize_weather(row) -> str:
 
 
 merged_weather['weather_category'] = merged_weather.apply(categorize_weather, axis=1)
-subway_weather = merged_weather[['subways_total_estimated_ridership', 'weather_category', 'period']].dropna()
+# Drop the very short pre-pandemic window to avoid an imbalanced comparison
+subway_weather = merged_weather.loc[merged_weather['period'] != 'Pre-Pandemic', ['subways_total_estimated_ridership', 'weather_category', 'period']]
+subway_weather = subway_weather.dropna()
 subway_weather = subway_weather.rename(columns={'subways_total_estimated_ridership': 'Ridership'})
 
 color_domain = ['Sunny', 'Drizzle', 'Light Rain', 'Moderate Rain', 'Heavy Rain', 'Storm', 'Light Snow', 'Moderate Snow', 'Heavy Snow']
@@ -176,7 +179,7 @@ chart_ridges = (
                         legend=alt.Legend(title='Weather Condition', orient='right', titleFont=FONT_STACK, labelFont=FONT_STACK, symbolSize=150)),
         column=alt.Column('period:N', title='Time Period',
                           header=alt.Header(labelAngle=0, labelAlign='center', titleFont=FONT_STACK, labelFont=FONT_STACK),
-                          sort=['Pre-Pandemic', 'During Pandemic', 'Recovery Phase', 'Post-Pandemic']),
+                          sort=['During Pandemic', 'Recovery Phase', 'Post-Pandemic']),
         tooltip=[
             alt.Tooltip('weather_category:N', title='Weather'),
             alt.Tooltip('period:N', title='Period'),
@@ -206,64 +209,76 @@ merged_aqi = pd.merge(mta_for_aqi, air_for_merge, on='date', how='inner')
 merged_aqi['date'] = pd.to_datetime(merged_aqi['date'])
 
 # Helper to build AQI/ridership chart variations
-
-def build_aqi_chart(df: pd.DataFrame, periods, colors, title_suffix: str, outfile: Path):
-    brush = alt.selection_interval(encodings=['x'], name='DateRange')
+def build_aqi_chart(df: pd.DataFrame, periods, title_suffix: str, outfile: str):
+    date_min, date_max = df['date'].min(), df['date'].max()
     aqi_min, aqi_max = float(df['daily_aqi'].min()), float(df['daily_aqi'].max())
-    aqi_param = alt.param(name='AQIMax', value=min(120, aqi_max),
-                          bind=alt.binding_range(min=aqi_min, max=aqi_max, step=1, name='Max AQI: '))
+    date_min_ms, date_max_ms = int(date_min.timestamp() * 1000), int(date_max.timestamp() * 1000)
 
-    x_domain = [pd.Timestamp('2020-03-01'), df['date'].max()]
-
-    top = (
-        alt.Chart(df)
-        .mark_line()
-        .encode(
-            x=alt.X('date:T', axis=alt.Axis(format='%b %Y', tickCount='month', title='Date', labelFont=FONT_STACK, titleFont=FONT_STACK),
-                    scale=alt.Scale(domain=x_domain)),
-            y=alt.Y('daily_aqi:Q', title='Daily AQI', axis=alt.Axis(labelFont=FONT_STACK, titleFont=FONT_STACK)),
-            color=alt.Color('period:N', title='Period', scale=alt.Scale(domain=list(periods.keys()), range=list(periods.values()))),
-            tooltip=['date:T','daily_aqi:Q','period:N']
-        )
-        .add_params(brush, aqi_param)
-        .properties(width=800, height=140, title='Brush to filter the scatter below')
+    date_slider = alt.param(
+        name='DateMax',
+        value=date_max_ms,
+        bind=alt.binding_range(min=date_min_ms, max=date_max_ms, step=24 * 60 * 60 * 1000, name='Show dates up to: ')
+    )
+    aqi_slider = alt.param(
+        name='AQIMax',
+        value=min(120, aqi_max),
+        bind=alt.binding_range(min=aqi_min, max=aqi_max, step=1, name='Max AQI:')
     )
 
-    main = (
+    base = (
         alt.Chart(df)
-        .transform_filter(brush)
+        .transform_filter('time(datum.date) <= DateMax')
         .transform_filter('datum.daily_aqi <= AQIMax')
-        .mark_point(opacity=0.6, size=35)
         .encode(
-            x=alt.X('date:T', axis=alt.Axis(format='%Y-%m', title='Date', labelFont=FONT_STACK, titleFont=FONT_STACK),
-                    scale=alt.Scale(domain=x_domain)),
-            y=alt.Y('ridership:Q', title='Ridership', axis=alt.Axis(labelFont=FONT_STACK, titleFont=FONT_STACK)),
-            color=alt.Color('period:N', title='Period', scale=alt.Scale(domain=list(periods.keys()), range=list(periods.values()))),
-            tooltip=['date:T', alt.Tooltip('ridership:Q', title='Ridership'), 'daily_aqi:Q','period:N']
+            color=alt.Color('period:N', title='Period',
+                            scale=alt.Scale(domain=list(periods.keys()), range=list(periods.values()))),
+            tooltip=['date:T',
+                     alt.Tooltip('ridership:Q', title='Ridership', format=','),
+                     alt.Tooltip('daily_aqi:Q', title='AQI'),
+                     'period:N']
         )
-        .properties(width=800, height=360, title=f'Subway Ridership over Time under AQI Threshold ({title_suffix})')
     )
 
-    reg = (
-        alt.Chart(df)
-        .transform_filter(brush)
-        .transform_filter('datum.daily_aqi <= AQIMax')
-        .transform_regression('date', 'ridership', groupby=['period'])
-        .mark_line(strokeDash=[4,2])
+    scatter = (
+        base.mark_point(size=45, opacity=0.65)
         .encode(
-            x=alt.X('date:T', scale=alt.Scale(domain=x_domain)),
-            y='ridership:Q',
-            color=alt.Color('period:N', scale=alt.Scale(domain=list(periods.keys()), range=list(periods.values())))
+            x=alt.X('daily_aqi:Q', title='Daily AQI'),
+            y=alt.Y('ridership:Q', title='Subway Ridership'),
         )
+        .properties(width=700, height=420,
+                    title=f'Subway Ridership vs. Air Quality ({title_suffix})')
+    )
+
+    trend = (
+        base.transform_regression('daily_aqi', 'ridership', groupby=['period'])
+        .mark_line(strokeDash=[4, 2])
+        .encode(x='daily_aqi:Q', y='ridership:Q')
+    )
+
+    timeline = (
+        alt.Chart(df)
+        .transform_filter('time(datum.date) <= DateMax')
+        .transform_filter('datum.daily_aqi <= AQIMax')
+        .mark_area(opacity=0.25, interpolate='monotone')
+        .encode(
+            x=alt.X('date:T', title='Timeline', axis=alt.Axis(labelFont=FONT_STACK, titleFont=FONT_STACK)),
+            y=alt.Y('ridership:Q', aggregate='mean', title='Avg ridership', axis=alt.Axis(labelFont=FONT_STACK, titleFont=FONT_STACK)),
+            color=alt.Color('period:N', legend=None,
+                            scale=alt.Scale(domain=list(periods.keys()), range=list(periods.values())))
+        )
+        .properties(width=700, height=90, title='Use the sliders to filter by date and AQI')
     )
 
     chart = (
-        alt.vconcat(top, main + reg)
+        alt.vconcat(scatter + trend, timeline, spacing=12)
+        .add_params(date_slider, aqi_slider)
         .resolve_scale(color='shared')
-        .configure_title(font=FONT_STACK)
+        .configure_title(font=FONT_STACK, fontSize=18)
+        .configure_axis(labelFont=FONT_STACK, titleFont=FONT_STACK)
+        .configure_legend(titleFont=FONT_STACK, labelFont=FONT_STACK)
+        .configure(autosize=alt.AutoSizeParams(type='fit', contains='padding'))
     )
-    name = outfile.stem
-    save_chart(chart, name)
+    save_chart(chart, outfile)
 
 # Chart 3: AQI version 1 (Pre/During/Recovery/Post)
 periods_v1 = {
@@ -279,7 +294,7 @@ df_v1.loc[df_v1['date'] < pd.Timestamp('2020-03-01'), 'period'] = 'Pre-COVID'
 df_v1.loc[(df_v1['date'] >= pd.Timestamp('2020-03-01')) & (df_v1['date'] <= pd.Timestamp('2021-06-30')), 'period'] = 'During-COVID'
 df_v1.loc[(df_v1['date'] > pd.Timestamp('2021-06-30')) & (df_v1['date'] <= pd.Timestamp('2022-12-31')), 'period'] = 'Recovery'
 
-build_aqi_chart(df_v1, periods_v1, None, 'COVID period bands', CHART_DIR / 'aqi_periods.json')
+build_aqi_chart(df_v1, periods_v1, 'COVID period bands', 'aqi_periods')
 
 # Chart 4: AQI version 2 (Pre/During/Recovery Phase/Post as in notebook cell 11)
 periods_v2 = {
@@ -292,7 +307,7 @@ periods_v2 = {
 df_v2 = merged_aqi.copy().sort_values('date')
 df_v2['period'] = df_v2['date'].apply(categorize_period)
 
-build_aqi_chart(df_v2, periods_v2, None, 'Pandemic timeline', CHART_DIR / 'aqi_periods_v2.json')
+build_aqi_chart(df_v2, periods_v2, 'Pandemic timeline', 'aqi_periods_v2')
 
 # Chart 5: MTA usage over time (from notebook)
 def prepare_mta_usage(df: pd.DataFrame) -> pd.DataFrame:
@@ -335,9 +350,13 @@ def prepare_mta_usage(df: pd.DataFrame) -> pd.DataFrame:
 def build_mta_usage_chart(tidy: pd.DataFrame) -> alt.VConcatChart:
     """Interactive multi-line chart with brush + toggle for counts vs percentages."""
     toggle = alt.param(
-        name="Show_Percentage",
-        bind=alt.binding_checkbox(name=" Show percentage of comparable day"),
-        value=False
+        name="Metric",
+        value="Ridership",
+        bind=alt.binding_select(
+            options=["Ridership", "% of pre-pandemic"],
+            labels=["Ridership (counts)", "Percent of comparable day"],
+            name="Metric: "
+        )
     )
     legend_sel = alt.selection_point(fields=["mode"], bind="legend")
     brush = alt.selection_interval(encodings=["x"])
@@ -345,12 +364,13 @@ def build_mta_usage_chart(tidy: pd.DataFrame) -> alt.VConcatChart:
     base = (
         alt.Chart(tidy)
         .transform_calculate(
-            y_value="Show_Percentage ? datum.value_pct : datum.value_total"
+            y_value="Metric == '% of pre-pandemic' ? datum.value_pct : datum.value_total",
+            y_title="Metric == '% of pre-pandemic' ? '% of comparable day' : 'Daily ridership'"
         )
         .encode(
             y=alt.Y(
                 "y_value:Q",
-                title="Ridership (counts or % of comparable day)",
+                title="Ridership (counts) or % of comparable day",
                 axis=alt.Axis(labelFont=FONT_STACK, titleFont=FONT_STACK, format=",.0f")
             ),
             color=alt.Color(
