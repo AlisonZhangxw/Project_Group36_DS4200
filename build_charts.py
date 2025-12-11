@@ -105,11 +105,20 @@ text = (
     .mark_text(baseline='middle')
     .encode(
         x=alt.X('precipitation_level:O', sort=precip_order),
-        y='day_of_week:O',
+        y=alt.Y(
+            'day_of_week:N',
+            sort=None,
+            scale=alt.Scale(domain=weekday_order)
+        ),
         text=alt.Text('avg_ridership:Q', format=',.0f'),
-        color=alt.condition(alt.datum.avg_ridership > threshold, alt.value('white'), alt.value('black'))
+        color=alt.condition(
+            alt.datum.avg_ridership > threshold,
+            alt.value('white'),
+            alt.value('black')
+        )
     )
 )
+
 
 chart_heatmap = (
     alt.layer(heatmap, text)
