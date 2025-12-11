@@ -77,14 +77,18 @@ heat_grouped = (
 min_val, max_val = heat_grouped['avg_ridership'].min(), heat_grouped['avg_ridership'].max()
 threshold = heat_grouped['avg_ridership'].median()
 
+weekday_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+
 heatmap = (
     alt.Chart(heat_grouped)
     .mark_rect()
     .encode(
         x=alt.X('precipitation_level:O', title='Precipitation Level', sort=precip_order,
                 axis=alt.Axis(labelAngle=-45, labelFont=FONT_STACK, titleFont=FONT_STACK)),
-        y=alt.Y('day_of_week:O', title='Day of Week', 
-                sort=['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+        y=alt.Y('day_of_week:N',
+                title='Day of Week',
+                sort=None,  
+                scale=alt.Scale(domain=weekday_order),  
                 axis=alt.Axis(labelFont=FONT_STACK, titleFont=FONT_STACK)),
         color=alt.Color('avg_ridership:Q', title='Avg Daily Ridership',
                         scale=alt.Scale(scheme='blues', domain=[min_val, max_val])),
