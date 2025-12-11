@@ -3,9 +3,9 @@ DS4200 Final Project - Group 36
 =====================================================
 
 GROUP MEMBERS:
-- Wangxuanyan Zhou (zhou.wangx@northeastern.edu)
-- Zichen Mi (mi.zic@northeastern.edu)
-- Xinwen Zhang (zhang.xinw@northeastern.edu)
+- Wangxuanyan Zhou (zhou.wa@northeastern.edu)
+- Zichen Mi (mi.zi@northeastern.edu)
+- Xinwen Zhang (zhang.xinwen@northeastern.edu)
 
 PUBLISHED WEBSITE:
 https://alisonzhangxw.github.io/Project_Group36_DS4200/
