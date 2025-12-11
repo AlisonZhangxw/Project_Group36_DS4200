@@ -1,0 +1,67 @@
+NYC Subway Ridership Analysis - Visualization Design
+DS4200 Final Project - Group 36
+=====================================================
+
+GROUP MEMBERS:
+- Wangxuanyan Zhou (zhou.wangx@northeastern.edu)
+- Zichen Mi (mi.zic@northeastern.edu)
+- Xinwen Zhang (zhang.xinw@northeastern.edu)
+
+PUBLISHED WEBSITE:
+[Please add your GitHub Pages link here]
+
+
+PROJECT OVERVIEW:
+Our project analyzes NYC subway ridership changes from 2020-2024, investigating 
+why approximately 1 million daily riders never returned after the pandemic.
+
+
+VISUALIZATION DESCRIPTIONS:
+
+1. Transit Usage Over Time (mta_usage.html)
+   - Shows subway, bus, and bridge/tunnel traffic from April 2020-2024
+   - Interactive: toggle between ridership counts and % recovery
+   - Key finding: Subways recovered to only 60-80% while cars exceeded pre-pandemic
+   
+2. Weather Impact (weather_density.html)
+   - Violin plots showing how weather affects ridership across pandemic phases
+   - Excludes pre-pandemic data (too short period)
+   - Key finding: Weather now influences ridership more than before
+   
+3. Air Quality vs Ridership (aqi_periods_v2.html)
+   - Scatter plot with date and AQI sliders
+   - Shows ridership vs air quality from April 2020-2024
+   - Key finding: Air quality has minimal impact compared to work schedules
+   
+4. Weekday & Weather Heatmap (heatmap.html)
+   - Shows average ridership by day of week and precipitation level
+   - Days ordered Monday through Sunday
+   - Key finding: Tuesday-Thursday peak shows hybrid work pattern
+
+
+PYTHON CODE:
+build_charts.py generates all visualizations using Altair library.
+Key modifications:
+- Removed data before April 2020 from all relevant charts
+- Fixed heatmap to display days Monday-Sunday in order
+- Increased chart heights for better display
+
+
+DESIGN CHOICES:
+- Interactive features let users explore data themselves
+- Color coding is consistent across charts
+- Responsive design works on different screen sizes
+- All charts include tooltips for detailed information
+
+
+FILES INCLUDED:
+- index.html (main website)
+- build_charts.py (code to generate visualizations)
+- charts/ folder with 5 HTML visualizations and their JSON specs
+- This explanation document
+
+
+MODIFICATIONS FOR FINAL SUBMISSION:
+1. Removed pre-pandemic data (before April 2020) for balanced comparison
+2. Fixed weekday ordering in heatmap (Monday → Sunday)
+3. Increased chart heights so content displays without scrolling
