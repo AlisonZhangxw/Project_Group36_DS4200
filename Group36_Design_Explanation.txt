@@ -8,7 +8,7 @@ GROUP MEMBERS:
 - Xinwen Zhang (zhang.xinw@northeastern.edu)
 
 PUBLISHED WEBSITE:
-[Please add your GitHub Pages link here]
+https://alisonzhangxw.github.io/Project_Group36_DS4200/
 
 
 PROJECT OVERVIEW:
